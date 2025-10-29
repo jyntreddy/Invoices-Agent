@@ -114,7 +114,7 @@ The alerts occur because CodeQL tracks user input flow to path operations, but i
 
 ### For Production Deployment
 
-1. **HTTPS/TLS**: Deploy behind a reverse proxy (nginx, Traxit) with HTTPS
+1. **HTTPS/TLS**: Deploy behind a reverse proxy (nginx, Traefik) with HTTPS
 2. **CORS**: Restrict `allow_origins` to specific domains in production
 3. **Rate Limiting**: Implement rate limiting at reverse proxy or API level
 4. **API Authentication**: Consider adding API key authentication for endpoints
@@ -160,5 +160,5 @@ The Invoices-Agent application implements comprehensive security measures approp
 
 For production use, follow the additional hardening recommendations and ensure proper deployment configuration with HTTPS, rate limiting, and monitoring.
 
-**Last Updated**: October 29, 2025
+**Last Updated**: October 29, 2024
 **Security Review Status**: ✅ Complete
