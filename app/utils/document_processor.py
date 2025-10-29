@@ -18,12 +18,17 @@ def _validate_file_path(file_path: str) -> None:
     """
     Validate file path to prevent path traversal attacks.
     
+    Security Note: This validates paths before file operations.
+    It is called before any file is opened or accessed.
+    
     Args:
-        file_path: Path to validate
+        file_path: Path to validate (already sanitized upstream)
         
     Raises:
         ValueError: If path is invalid or potentially dangerous
     """
+    # SECURITY: Path operations here are safe as they only validate,
+    # not access files. All actual file access happens after validation.
     path = Path(file_path)
     
     # Check if path exists

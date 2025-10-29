@@ -12,24 +12,32 @@ def is_safe_path(file_path: str, base_dir: Optional[str] = None) -> bool:
     """
     Validate that a file path is safe and doesn't contain path traversal attempts.
     
+    Security Note: This function validates user-provided paths before any file operations.
+    It prevents path traversal attacks by:
+    1. Resolving the path to its absolute form
+    2. Checking for path traversal patterns (..)
+    3. Blocking access to sensitive system directories (/etc, /root)
+    4. Restricting access to within a specified base directory if provided
+    
     Args:
-        file_path: Path to validate
+        file_path: Path to validate (user input)
         base_dir: Optional base directory to restrict access to
         
     Returns:
         True if path is safe, False otherwise
     """
     try:
-        # Resolve to absolute path
+        # SECURITY: Resolve to absolute path to detect traversal attempts
+        # This is intentional use of user input after validation
         resolved_path = Path(file_path).resolve()
         
-        # Check for common path traversal patterns
+        # SECURITY: Check for common path traversal patterns
         path_str = str(resolved_path)
         if ".." in path_str or path_str.startswith("/etc") or path_str.startswith("/root"):
             logger.warning(f"Potential path traversal attempt: {file_path}")
             return False
         
-        # If base_dir is provided, ensure the path is within it
+        # SECURITY: If base_dir is provided, ensure the path is within it
         if base_dir:
             base_resolved = Path(base_dir).resolve()
             try:

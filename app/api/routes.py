@@ -160,11 +160,20 @@ async def upload_and_classify(file: UploadFile = File(...)):
         # Save uploaded file to temp storage
         temp_path = storage_service.get_temp_path(safe_filename)
         
+        # SECURITY: Limit file size to prevent DoS (50MB max)
+        MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+        file_size = 0
+        
         with open(temp_path, "wb") as f:
             content = await file.read()
+            file_size = len(content)
+            
+            if file_size > MAX_FILE_SIZE:
+                raise HTTPException(status_code=413, detail=f"File too large. Maximum size is 50MB")
+            
             f.write(content)
         
-        logger.info(f"File saved to temp: {temp_path}")
+        logger.info(f"File saved to temp: {temp_path} (size: {file_size} bytes)")
         
         # Classify
         classification = await classifier.classify_document(str(temp_path))
