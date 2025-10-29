@@ -1,8 +1,8 @@
-# Invoices-Agent 🤖📧
+# Invoices-Agent 
 
 An intelligent agentic AI backend that monitors Outlook emails, extracts attachments, classifies documents as invoices or non-invoices using AI, and automatically organizes files into appropriate folders.
 
-## 🧩 Tech Stack
+## Tech Stack
 
 - **LangChain** → LLM orchestration and document classification
 - **LangGraph** → Agent workflow with branching and decision logic
@@ -11,7 +11,7 @@ An intelligent agentic AI backend that monitors Outlook emails, extracts attachm
 - **OpenAI GPT-4** → Document classification (supports other LLMs)
 - **Python 3.9+** → Core programming language
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐
