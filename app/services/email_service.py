@@ -12,6 +12,7 @@ from azure.identity import ClientSecretCredential
 from app.config import get_settings
 from app.models import EmailMessage, Attachment
 from app.utils.logger import get_logger
+from app.utils.security import sanitize_filename
 
 logger = get_logger()
 
@@ -116,6 +117,10 @@ class EmailService:
         try:
             logger.info(f"Downloading attachment {attachment_id} from email {email_id}")
             
+            # Sanitize the filename to prevent path traversal
+            safe_filename = sanitize_filename(save_path.name)
+            safe_save_path = save_path.parent / safe_filename
+            
             # Get the attachment
             attachment = await self.client.users.by_user_id(
                 self.settings.user_email
@@ -124,15 +129,15 @@ class EmailService:
             ).get()
 
             # Ensure save directory exists
-            save_path.parent.mkdir(parents=True, exist_ok=True)
+            safe_save_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Save attachment content
             if hasattr(attachment, "content_bytes") and attachment.content_bytes:
                 content = base64.b64decode(attachment.content_bytes)
-                with open(save_path, "wb") as f:
+                with open(safe_save_path, "wb") as f:
                     f.write(content)
-                logger.info(f"Attachment saved to {save_path}")
-                return str(save_path)
+                logger.info(f"Attachment saved to {safe_save_path}")
+                return str(safe_save_path)
             else:
                 raise ValueError("Attachment has no content")
 

@@ -15,6 +15,8 @@ from app.models import (
 )
 from app.services import EmailService, ClassifierService, StorageService, AgentWorkflow
 from app.utils.logger import get_logger
+from app.utils.security import is_safe_path, sanitize_filename
+from app.config import get_settings
 
 logger = get_logger()
 router = APIRouter()
@@ -102,6 +104,14 @@ async def classify_document(request: ClassifyRequest):
     try:
         logger.info(f"Classification requested for: {request.file_path}")
         
+        # Validate path for security
+        settings = get_settings()
+        storage_base = str(settings.storage_base_path)
+        
+        if not is_safe_path(request.file_path, base_dir=storage_base):
+            logger.warning(f"Unsafe path detected: {request.file_path}")
+            raise HTTPException(status_code=400, detail="Invalid or unsafe file path")
+        
         # Check if file exists
         file_path = Path(request.file_path)
         if not file_path.exists():
@@ -139,12 +149,16 @@ async def upload_and_classify(file: UploadFile = File(...)):
     try:
         logger.info(f"File upload and classification requested: {file.filename}")
         
+        # Sanitize filename to prevent path traversal
+        safe_filename = sanitize_filename(file.filename)
+        logger.info(f"Sanitized filename: {safe_filename}")
+        
         # Initialize services
         storage_service = StorageService()
         classifier = ClassifierService()
         
         # Save uploaded file to temp storage
-        temp_path = storage_service.get_temp_path(file.filename)
+        temp_path = storage_service.get_temp_path(safe_filename)
         
         with open(temp_path, "wb") as f:
             content = await file.read()
@@ -162,7 +176,7 @@ async def upload_and_classify(file: UploadFile = File(...)):
         )
         
         response = ClassifyResponse(
-            file_name=file.filename,
+            file_name=safe_filename,
             classification=classification,
             timestamp=datetime.now()
         )

@@ -14,6 +14,38 @@ from app.utils.logger import get_logger
 logger = get_logger()
 
 
+def _validate_file_path(file_path: str) -> None:
+    """
+    Validate file path to prevent path traversal attacks.
+    
+    Args:
+        file_path: Path to validate
+        
+    Raises:
+        ValueError: If path is invalid or potentially dangerous
+    """
+    path = Path(file_path)
+    
+    # Check if path exists
+    if not path.exists():
+        raise ValueError(f"File does not exist: {file_path}")
+    
+    # Check if it's a file (not a directory)
+    if not path.is_file():
+        raise ValueError(f"Path is not a file: {file_path}")
+    
+    # Resolve to absolute path and check for traversal
+    resolved = path.resolve()
+    
+    # Prevent access to system directories
+    forbidden_dirs = ["/etc", "/root", "/sys", "/proc", "/dev"]
+    for forbidden in forbidden_dirs:
+        if str(resolved).startswith(forbidden):
+            raise ValueError(f"Access to {forbidden} is not allowed")
+    
+    logger.debug(f"Path validation passed for: {file_path}")
+
+
 def extract_text_from_pdf(file_path: str) -> str:
     """Extract text from PDF file."""
     try:
@@ -63,6 +95,13 @@ def extract_text_from_file(file_path: str) -> str:
     Returns:
         Extracted text content
     """
+    # Validate path first
+    try:
+        _validate_file_path(file_path)
+    except ValueError as e:
+        logger.error(f"Path validation failed: {e}")
+        return ""
+    
     path = Path(file_path)
     suffix = path.suffix.lower()
     
